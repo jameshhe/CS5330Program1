@@ -10,8 +10,8 @@ class LinearHashing:
         self.maxOverflow = maxOverflow  # the limit of the number of overflow buckets for option 1 only
         self.sizeLimit = sizeLimit  # the capacity of the hash table before splitting occurs for option 2 only
 
-        self.pages = [[]]  # initialize the pages
-        self.isSplit = [False]  # keeps track of which bucket has been split
+        self.pages = [[], []]  # initialize the pages
+        self.isSplit = [False, False]  # keeps track of which bucket has been split
 
         self.level = 0  # the current level of hashing
         self.pointer = 0  # Points to the next bucket to be split
@@ -33,16 +33,18 @@ class LinearHashing:
             # a level finishes when all the buckets at the current level is split
             self.split()
             index = self.get_insert_index(x, self.level)
+            print(self.pointer, self.level, x, index)
             self.pages[index].append(x)
             return True
-        # returns true if a split happens, false if not
+            # returns true if a split happens, false if not
 
     def update_table(self):
-        if len(self.pages) < 2 ** self.level:
+        if len(self.pages) < 2 ** (self.level+1):
             # add buckets
             for i in range(len(self.pages), 2 ** self.level):
                 self.pages.append([])
                 self.isSplit.append(False)
+                print("updating tables", self.pages, self.isSplit)
 
     def get_insert_index(self, x, lastNDigit) -> int:
         if self.level == 0:
@@ -67,25 +69,28 @@ class LinearHashing:
         self.isSplit[self.pointer] = True
         # if we're not done with the current level, increment the level by 1
         if False in self.isSplit[:newCell]:
+            print("not incrementing level", self.isSplit)
             self.pointer += 1
         # otherwise, reset the pointer to 0 and allocate new space
         else:
+            print("incrementing level", self.isSplit)
             self.pointer = 0
             self.level += 1
             self.update_table()
-        for num in self.pages[self.pointer]:
-            # we're now looking at one more last digit than the current level
-            # if the current level is 0, we need to get the last 2 digits for example
-            insert_index = self.get_insert_index(num, self.level)
-            # move the number to the new index
-            if insert_index != self.pointer:
-                self.pages[self.pointer].remove(num)
-                self.pages[insert_index].append(num)
+        for i, bucket in enumerate(self.pages):
+            for num in bucket:
+                # we're now looking at one more last digit than the current level
+                # if the current level is 0, we need to get the last 2 digits for example
+                insert_index = self.get_insert_index(num, self.level)
+                # move the number to the new index
+                if insert_index != i:
+                    self.pages[i].remove(num)
+                    self.pages[insert_index].append(num)
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    lh = LinearHashing(3)
-    for number in [14, 7, 8, 15, 11, 1]:
+    lh = LinearHashing(2)
+    for number in [14, 7, 8, 15, 11, 1, 5, 9]:
         lh.insert(number)
         print(lh.pages)
 
